@@ -9,10 +9,11 @@ import { formatPricePLN } from "@/lib/utils";
 import { getCurrentSession } from "@/app/actions/auth";
 
 export default async function CartPage() {
+  const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
-  if (!uid) {
-    redirect("/auth/signin");
-  }
+  
+  if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");
+
   const cartItems = await getUserCartItems(uid);
 
   if (cartItems.length === 0) {

@@ -15,13 +15,12 @@ export default async function BookPage({ params }: { params:  { id: string } }) 
   const { id } = await params;
   const book = await getBook(id);
 
-  if (!book) {
-    redirect('/');
-  }
+  if (!book) redirect('/');
 
   const similarBooks = await getSimilarBooks(book.category, book.id);
+  const coverColor = getBookCoverColor(book.id);
+
   const uid = await getCurrentSession();
-  const coverColor = getBookCoverColor(book. id);
 
   const purchasedSimilarBookIds = uid
   ? await checkManyBooksPurchased(uid, similarBooks. map((b) => b.id))

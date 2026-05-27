@@ -6,8 +6,9 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function CheckoutSuccess() {
+  const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
-  if (!uid) redirect("/");
+  if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");
 
   const session = await validateCheckoutSession(uid)
   if (!session) redirect("/");

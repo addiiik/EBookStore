@@ -9,10 +9,9 @@ import { getUserAllPurchasedBooks } from '@/app/actions/user';
 import { getCurrentSession } from '@/app/actions/auth';
 
 export default async function LibraryPage() {
+  const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
-  if (!uid) {
-    redirect("/auth/signin");
-  }
+  if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");  
 
   const purchasedBooks = await getUserAllPurchasedBooks(uid)
 

@@ -27,6 +27,7 @@ export default async function SearchResults({ query }: SearchResultsProps) {
   const books = await getSearchResults(query)
 
   const uid = await getCurrentSession();
+  
   const purchasedBookIds = uid
   ? await checkManyBooksPurchased(uid, books.map((b) => b.id))
   : new Set();

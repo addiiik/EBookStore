@@ -9,10 +9,9 @@ import { getCurrentSession } from '@/app/actions/auth';
 import { getUserReadingProgresses } from '@/app/actions/reader';
 
 export default async function ReaderPage() {
+  const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
-  if (!uid) {
-    redirect("/auth/signin");
-  }
+  if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");  
 
   const [purchasedBooks, readingProgresses] = await Promise.all([
     getUserAllPurchasedBooks(uid),

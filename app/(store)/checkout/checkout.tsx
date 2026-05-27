@@ -46,7 +46,7 @@ export default function Checkout({cartItems }: CheckoutProps){
         toast.error(result.message);
         setIsLoading(false);
       }
-    } catch (error: any) {
+    } catch {
       toast.error("Something went wrong");
       setIsLoading(false);
     } 

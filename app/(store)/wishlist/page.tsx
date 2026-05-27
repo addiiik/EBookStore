@@ -8,10 +8,10 @@ import Link from "next/link";
 import { getCurrentSession } from "@/app/actions/auth";
 
 export default async function WishlistPage() {
+  const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
-  if (!uid) {
-    redirect("/auth/signin");
-  }
+  if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");  
+  
   const wishlistItems = await getUserWishlistItems(uid);
 
   if (wishlistItems.length === 0) {
@@ -21,7 +21,7 @@ export default async function WishlistPage() {
           <Heart className="mx-auto h-16 w-16 text-muted-foreground mb-4 fill-current" />
           <h1 className="text-3xl font-bold mb-4">Your Wishlist is Empty</h1>
           <p className="text-xl text-muted-foreground mb-8">
-            Save books you're interested in to your wishlist!
+            Save books you&apos;re interested in to your wishlist!
           </p>
           <Button asChild>
             <Link href="/">Browse Books</Link>

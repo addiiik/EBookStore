@@ -12,11 +12,9 @@ import { getUserAllPurchasedBooks, getUserInfo } from '@/app/actions/user';
 import { getUserReadingProgresses } from '@/app/actions/reader';
 
 export default async function UserPage() {
+  const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
-
-  if (!uid) {
-    redirect("/auth/signin");
-  }
+  if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");  
 
   const [ user, purchasedBooks, readingProgresses ] = await Promise.all([
     getUserInfo(uid),
@@ -24,11 +22,7 @@ export default async function UserPage() {
     getUserReadingProgresses(uid),
   ]);
 
-  if (!user) {
-    redirect("/auth/signin");
-  }
-
-  const isDemo = process.env.IS_DEMO === "true";
+  if (!user) redirect(isDemo ? "/auth" : "/auth/signin");  
 
   const latestPurchase = purchasedBooks[0];
   const totalSpent = purchasedBooks.reduce((sum, item) => 

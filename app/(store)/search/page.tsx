@@ -19,7 +19,7 @@ export default async function SearchPage({ searchParams }: SearchPageProps) {
           {query ? 'Search Results' : 'Search Books'}
         </h1>
         {query && (
-          <p className="text-muted-foreground">Showing results for "{query}"</p>
+          <p className="text-muted-foreground">Showing results for &quot;{query}&quot;</p>
         )}
       </div>
 
