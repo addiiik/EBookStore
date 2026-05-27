@@ -7,14 +7,14 @@ type LoadingOverlayProps = {
 export default function LoadingOverlay({ transparent = false }: LoadingOverlayProps) {
   if (transparent) {
     return (
-      <div className="absolute inset-0 z-9999 flex items-center justify-center rounded-xl bg-background/80">
+      <div className="absolute inset-0 z-9998 flex items-center justify-center rounded-xl bg-background/80">
         <Loader2 className="animate-spin" size={32} />
       </div>
     );
   }
 
   return (
-    <div className="fixed inset-0 z-9999 bg-background flex items-center justify-center">
+    <div className="fixed inset-0 z-9998 bg-background flex items-center justify-center">
       <Loader2 className="animate-spin" size={32} />
     </div>
   );
