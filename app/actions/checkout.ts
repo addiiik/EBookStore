@@ -32,7 +32,7 @@ export async function processCheckout(bookIds: string[]){
     await prisma.checkoutSession.create({
       data: {
         userId: uid,
-        validUntil: new Date(Date.now() + 1000 * 30)
+        validUntil: new Date(Date.now() + 1000 * 60 * 2)
       }
     });
 
@@ -59,10 +59,25 @@ export async function processCheckout(bookIds: string[]){
 }
 
 export async function validateCheckoutSession(userId: string) {
-  return await prisma.checkoutSession.findFirst({
-    where: {
-      userId,
-      validUntil: { gte: new Date() }
-    }
-  });
+  try {
+    return await prisma.checkoutSession.findFirst({
+      where: {
+        userId,
+        validUntil: { gte: new Date() }
+      }
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function deleteCheckoutSession(userId: string) {
+  try {
+    await prisma.checkoutSession.deleteMany({
+      where: { userId }
+    });
+    return { success: true };
+  } catch {
+    return { success: false };
+  }
 }

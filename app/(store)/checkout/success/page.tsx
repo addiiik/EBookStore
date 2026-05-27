@@ -1,5 +1,6 @@
 import { getCurrentSession } from "@/app/actions/auth";
 import { validateCheckoutSession } from "@/app/actions/checkout";
+import { ConsumeSession } from "./consume-session";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Library, ShoppingBag } from "lucide-react";
 import Link from "next/link";
@@ -9,12 +10,13 @@ export default async function CheckoutSuccess() {
   const isDemo = process.env.IS_DEMO === "true";
   const uid = await getCurrentSession();
   if (!uid) redirect(isDemo ? "/auth" : "/auth/signin");
-
-  const session = await validateCheckoutSession(uid)
+  const session = await validateCheckoutSession(uid);
   if (!session) redirect("/");
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4 py-12 bg-linear-to-b from-green-50 to-white">
+      <ConsumeSession userId={uid} />
+
       <div className="max-w-md w-full">
         <div className="text-center mb-8">
           <div className="flex justify-center mb-6">
