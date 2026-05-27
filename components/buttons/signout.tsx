@@ -5,25 +5,30 @@ import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 import { toast } from 'sonner';
 import { useRouter } from "next/navigation";
+import { exitDemo } from '@/app/actions/demo';
+
 interface SignOutButtonProps {
   demo: boolean;
 }
-export default function SignOutButton({demo}: SignOutButtonProps) {
+
+export default function SignOutButton({ demo }: SignOutButtonProps) {
   const router = useRouter();
+
   async function handleSignOut() {
     try {
-      const result = await removeUserSession();
+      const result = demo ? await exitDemo() : await removeUserSession();
+      
       if (result.success) {
         if (!demo) toast.success(result.message);
         router.refresh();
-      }
-      else {
+      } else {
         if (!demo) toast.error(result.message);
       }
     } catch {
       if (!demo) toast.error("Something went wrong");
     }
-  };
+  }
+
   return (
     <Button 
       variant="outline" 
