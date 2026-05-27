@@ -2,7 +2,7 @@
 
 import { prisma } from "@/lib/prisma";
 import { Book } from "@/types/book";
-import { getUserFromToken } from "./auth";
+import { getCurrentSession } from "./auth";
 
 export async function getFeaturedBooks(): Promise<Book[]> {
   const today = new Date().toISOString().split("T")[0];
@@ -82,15 +82,13 @@ export async function getSearchResults(query: string): Promise<Book[]> {
 }
 
 export async function toggleWishlistState(bookId: string) {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     return {success: false, message: 'You need to be logged in', wishlisted: false}
   }
 
-  const userId = payload.id
-
   const existing = await prisma.wishlistItem.findFirst({
-    where: { userId, bookId },
+    where: { userId: uid, bookId },
   });
 
   if (existing) {
@@ -102,22 +100,20 @@ export async function toggleWishlistState(bookId: string) {
   }
 
   await prisma.wishlistItem.create({
-    data: { userId, bookId },
+    data: { userId: uid, bookId },
   });
 
   return { success: true, message: 'Added to wishlist', wishlisted: true };
 }
 
 export async function toggleBookCartState(bookId: string) {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     return {success: false, message: 'You need to be logged in', inCart: false}
   }
 
-  const userId = payload.id
-
   const existing = await prisma.cartItem.findFirst({
-    where: { userId, bookId },
+    where: { userId: uid, bookId },
   });
 
   if (existing) {
@@ -129,7 +125,7 @@ export async function toggleBookCartState(bookId: string) {
   }
 
   await prisma.cartItem.create({
-    data: { userId, bookId },
+    data: { userId: uid, bookId },
   });
 
   return { success: true, message: 'Added to cart', inCart: true };

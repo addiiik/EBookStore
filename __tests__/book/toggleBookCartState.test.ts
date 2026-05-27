@@ -1,7 +1,7 @@
 import { vi, describe, expect, it, beforeEach } from "vitest";
 import { toggleBookCartState } from "@/app/actions/book";
 import { prisma } from "@/lib/prisma";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -14,7 +14,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/app/actions/auth", () => ({
-  getUserFromToken: vi.fn(),
+  getCurrentSession: vi.fn(),
 }));
 
 describe("toggleBookCartState", () => {
@@ -26,11 +26,11 @@ describe("toggleBookCartState", () => {
   });
 
   it("fails if user is not logged in", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(null);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(null);
 
     const result = await toggleBookCartState(bookId);
 
-    expect(getUserFromToken).toHaveBeenCalledTimes(1);
+    expect(getCurrentSession).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       success: false,
       message: "You need to be logged in",
@@ -40,7 +40,7 @@ describe("toggleBookCartState", () => {
   });
 
   it("removes item from cart if it already exists", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     (prisma.cartItem.findFirst as any).mockResolvedValueOnce({
       id: "cart-1",
     });
@@ -64,7 +64,7 @@ describe("toggleBookCartState", () => {
   });
 
   it("adds item to cart if it does not exist", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     (prisma.cartItem.findFirst as any).mockResolvedValueOnce(null);
     (prisma.cartItem.create as any).mockResolvedValueOnce({});
 

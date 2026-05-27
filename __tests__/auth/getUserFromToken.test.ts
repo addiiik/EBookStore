@@ -1,5 +1,5 @@
 import { vi, describe, it, expect, beforeEach } from "vitest";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 import { jwtVerify } from "jose";
 
 const mockCookieStore = {
@@ -20,7 +20,7 @@ vi.mock("jose", async () => {
   };
 });
 
-describe("getUserFromToken", () => {
+describe("getCurrentSession", () => {
   beforeEach(() => {
     vi.clearAllMocks();
   });
@@ -28,7 +28,7 @@ describe("getUserFromToken", () => {
   it("returns null if there is no auth_token cookie", async () => {
     mockCookieStore.get.mockReturnValueOnce(undefined);
 
-    const result = await getUserFromToken();
+    const result = await getCurrentSession();
 
     expect(result).toBeNull();
     expect(jwtVerify).not.toHaveBeenCalled();
@@ -38,7 +38,7 @@ describe("getUserFromToken", () => {
     mockCookieStore.get.mockReturnValueOnce({ value: "invalid-token" });
     (jwtVerify as any).mockRejectedValueOnce(new Error("invalid token"));
 
-    const result = await getUserFromToken();
+    const result = await getCurrentSession();
 
     expect(jwtVerify).toHaveBeenCalled();
     expect(result).toBeNull();
@@ -51,7 +51,7 @@ describe("getUserFromToken", () => {
 
     (jwtVerify as any).mockResolvedValueOnce({ payload });
 
-    const result = await getUserFromToken();
+    const result = await getCurrentSession();
 
     expect(jwtVerify).toHaveBeenCalledTimes(1);
     expect(jwtVerify).toHaveBeenCalledWith(fakeToken, expect.anything());

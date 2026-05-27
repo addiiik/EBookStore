@@ -6,15 +6,15 @@ import BookComponent from '@/components/ui/book';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getUserAllPurchasedBooks } from '@/app/actions/user';
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 
 export default async function LibraryPage() {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     redirect("/auth/signin");
   }
 
-  const purchasedBooks = await getUserAllPurchasedBooks(payload.id)
+  const purchasedBooks = await getUserAllPurchasedBooks(uid)
 
   const categories = [...new Set(purchasedBooks.map(item => item.book.category))];
 

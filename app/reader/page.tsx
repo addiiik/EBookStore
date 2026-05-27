@@ -1,23 +1,22 @@
 import { Card, CardContent } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { BookOpen, BookMarked, CheckCircle2, Clock } from 'lucide-react';
+import { BookOpen } from 'lucide-react';
 import BookComponent from '@/components/ui/book';
 import Link from 'next/link';
 import { redirect } from 'next/navigation';
 import { getUserAllPurchasedBooks } from '@/app/actions/user';
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 import { getUserReadingProgresses } from '@/app/actions/reader';
 
 export default async function ReaderPage() {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     redirect("/auth/signin");
   }
 
   const [purchasedBooks, readingProgresses] = await Promise.all([
-    getUserAllPurchasedBooks(payload.id),
-    getUserReadingProgresses(payload. id),
+    getUserAllPurchasedBooks(uid),
+    getUserReadingProgresses(uid),
   ]);
 
   const progressMap = new Map(

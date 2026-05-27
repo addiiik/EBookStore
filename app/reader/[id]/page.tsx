@@ -1,4 +1,4 @@
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 import { checkBookPurchased, getBookReader } from '@/app/actions/book';
 import { redirect } from 'next/navigation';
 import ReaderBookClient from './readerClient';
@@ -9,13 +9,13 @@ export default async function ReaderBookPage({ params }: { params: { id: string 
   const book = await getBookReader(id);
 
   if (!book) redirect('/');
-  const payload = await getUserFromToken();
-  if (!payload) redirect('/');
+  const uid = await getCurrentSession();
+  if (!uid) redirect('/');
 
-  const isPurchased = await checkBookPurchased(payload.id, book.id);
+  const isPurchased = await checkBookPurchased(uid, book.id);
   if (!isPurchased) redirect(`/book/${book.id}`);
 
-  const progress = await checkReadingProgress(payload.id, book.id);
+  const progress = await checkReadingProgress(uid, book.id);
   if (!progress) redirect('/reader');
 
   const seed = `book-${book.id}`;

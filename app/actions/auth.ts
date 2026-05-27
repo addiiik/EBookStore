@@ -1,13 +1,13 @@
 "use server";
 
 import { cookies } from "next/headers";
-import { SignJWT, jwtVerify } from "jose";
+import jwt from "jsonwebtoken";
 import { prisma } from "@/lib/prisma";
 import bcrypt from "bcryptjs";
 import { SignInSchema, SignUpSchema, SignInFormData, SignUpFormData } from "@/schemas/auth";
-import { AuthTokenPayload } from "@/types/auth";
 
-const secret = new TextEncoder().encode(process.env.JWT_SECRET!);
+const isDemo = process.env.IS_DEMO === "true";
+const SESSION_COOKIE_NAME = isDemo ? "demo_session" : "auth_session";
 
 export async function signInAction(formData: SignInFormData) {
   const parsed = SignInSchema.safeParse(formData);
@@ -33,7 +33,7 @@ export async function signInAction(formData: SignInFormData) {
   const valid = await bcrypt.compare(password, user.password);
   if (!valid) return { success: false, message: "Invalid email or password" };
 
-  await storeUserToken(user.id);
+  await createUserSession(user.id);
 
   return { success: true, message: "Signed in successfully" };
 }
@@ -74,44 +74,53 @@ export async function signUpAction(formData: SignUpFormData) {
     },
   });
 
-  await storeUserToken(user.id);
+  await createUserSession(user.id);
 
   return { success: true, message: "Account created successfully!" };
 }
 
-export async function signOutAction() {
+export async function removeUserSession(): Promise<{ success: boolean; message: string }> {
   const cookieStore = await cookies();
-  cookieStore.delete("auth_token");
-  return { success: true, message: "Signed out successfully" };
+  cookieStore.delete(SESSION_COOKIE_NAME);
+  
+  return { 
+    success: true, 
+    message: isDemo ? "" : "Signed out successfully" 
+  };
 }
 
-export async function getUserFromToken() {
+export async function getCurrentSession(): Promise<string | null> {
   const cookieStore = await cookies();
-  const token = cookieStore.get("auth_token")?.value;
-
+  const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
   if (!token) return null;
 
   try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload as AuthTokenPayload;
+    const payload = jwt.verify(token, process.env.JWT_SECRET!) as { uid: string };
+    return payload.uid;
   } catch {
     return null;
   }
 }
 
-async function storeUserToken(userId: string){
-  const token = await new SignJWT({
-    id: userId,
-  })
-    .setProtectedHeader({ alg: "HS256" })
-    .setExpirationTime("7d")
-    .sign(secret);
+export async function createUserSession(uid: string): Promise<{ success: boolean }> {
+  const token = await generateToken(uid);
 
   const cookieStore = await cookies();
-  cookieStore.set("auth_token", token, {
+  cookieStore.set(SESSION_COOKIE_NAME, token, {
     httpOnly: true,
     secure: process.env.NODE_ENV === "production",
-    maxAge: 60 * 60 * 24 * 7,
+    sameSite: "lax",
+    maxAge: 60 * 60 * 24,
     path: "/",
   });
+
+  return { success: true };
+}
+
+export async function generateToken(uid: string): Promise<string> {
+  return jwt.sign(
+    { uid: uid },
+    process.env.JWT_SECRET!,
+    { expiresIn: "24h" }
+  );
 }

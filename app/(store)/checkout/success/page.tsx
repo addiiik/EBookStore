@@ -1,4 +1,4 @@
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 import { validateCheckoutSession } from "@/app/actions/checkout";
 import { Button } from "@/components/ui/button";
 import { CheckCircle, Library, ShoppingBag } from "lucide-react";
@@ -6,10 +6,10 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 
 export default async function CheckoutSuccess() {
-  const payload = await getUserFromToken();
-  if (!payload) redirect("/");
+  const uid = await getCurrentSession();
+  if (!uid) redirect("/");
 
-  const session = await validateCheckoutSession(payload.id)
+  const session = await validateCheckoutSession(uid)
   if (!session) redirect("/");
 
   return (

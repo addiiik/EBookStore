@@ -5,14 +5,14 @@ import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 
 export default async function WishlistPage() {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     redirect("/auth/signin");
   }
-  const wishlistItems = await getUserWishlistItems(payload.id);
+  const wishlistItems = await getUserWishlistItems(uid);
 
   if (wishlistItems.length === 0) {
     return (

@@ -1,14 +1,14 @@
 import { getUserCartItems } from "@/app/actions/user";
 import { redirect } from "next/navigation";
 import Checkout from "./checkout";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 
 export default async function CheckoutPage() {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     redirect("/auth/signin");
   }
-  const cartItems = await getUserCartItems(payload.id);
+  const cartItems = await getUserCartItems(uid);
 
   if (cartItems.length === 0) {
     redirect("/");

@@ -1,4 +1,4 @@
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 import { checkManyBooksPurchased, getBooksByCategory } from "@/app/actions/book";
 import BookComponent from "@/components/ui/book";
 import { Card, CardContent } from "@/components/ui/card";
@@ -10,9 +10,9 @@ export default async function SubjectPage({ params }: { params: { category: stri
   const category = decodeURIComponent(cat_params.category);
 
   const books = await getBooksByCategory(category);
-  const payload = await getUserFromToken();
-  const purchasedBookIds = payload
-  ? await checkManyBooksPurchased(payload.id, books.map((b) => b.id))
+  const uid = await getCurrentSession();
+  const purchasedBookIds = uid
+  ? await checkManyBooksPurchased(uid, books.map((b) => b.id))
   : new Set();
 
   const allCategories = [

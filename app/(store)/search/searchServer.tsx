@@ -1,4 +1,4 @@
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 import { checkManyBooksPurchased, getSearchResults } from '@/app/actions/book';
 import { Badge } from '@/components/ui/badge';
 import BookComponent from '@/components/ui/book';
@@ -18,7 +18,7 @@ export default async function SearchResults({ query }: SearchResultsProps) {
         <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
         <h2 className="text-2xl font-semibold mb-2">Start your search</h2>
         <p className="text-muted-foreground">
-          Enter a book title, author name, or subject to find what you're looking for.
+          Enter a book title, author name, or subject to find what you&apos;re looking for.
         </p>
       </div>
     );
@@ -26,9 +26,9 @@ export default async function SearchResults({ query }: SearchResultsProps) {
 
   const books = await getSearchResults(query)
 
-  const payload = await getUserFromToken();
-  const purchasedBookIds = payload
-  ? await checkManyBooksPurchased(payload.id, books.map((b) => b.id))
+  const uid = await getCurrentSession();
+  const purchasedBookIds = uid
+  ? await checkManyBooksPurchased(uid, books.map((b) => b.id))
   : new Set();
 
   if (books.length === 0) {
@@ -37,7 +37,7 @@ export default async function SearchResults({ query }: SearchResultsProps) {
         <Search className="h-16 w-16 text-muted-foreground mx-auto mb-4" />
         <h2 className="text-2xl font-semibold mb-2">No results found</h2>
         <p className="text-muted-foreground mb-4">
-          We couldn't find any books matching "{query}".
+          We couldn&apos;t find any books matching &quot;{query}&quot;.
         </p>
       </div>
     );

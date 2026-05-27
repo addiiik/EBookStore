@@ -2,14 +2,14 @@ import { checkManyBooksPurchased, getFeaturedBooks } from "@/app/actions/book";
 import { Card, CardContent } from "@/components/ui/card";
 import Link from "next/link";
 import BookComponent from "@/components/ui/book";
-import { getUserFromToken } from "../actions/auth";
+import { getCurrentSession } from "../actions/auth";
 
 export default async function Home() {
   const featuredBooks = await getFeaturedBooks();
-  const payload = await getUserFromToken();
-  const purchasedBookIds = payload
-  ? await checkManyBooksPurchased(payload.id, featuredBooks.map((b) => b.id))
-  : new Set();
+  const uid = await getCurrentSession();
+  const purchasedBookIds = uid
+    ? await checkManyBooksPurchased(uid, featuredBooks.map((b) => b.id))
+    : new Set();
 
   return (
     <div className="container mx-auto px-4 py-8">

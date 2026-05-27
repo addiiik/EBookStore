@@ -5,27 +5,30 @@ import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import BookComponent from '@/components/ui/book';
 import SignOutButton from '@/components/buttons/signout';
+import ResetDemoButton from '@/components/buttons/reset';
 import { formatPricePLN } from '@/lib/utils';
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 import { getUserAllPurchasedBooks, getUserInfo } from '@/app/actions/user';
 import { getUserReadingProgresses } from '@/app/actions/reader';
 
 export default async function UserPage() {
-  const payload = await getUserFromToken();
+  const uid = await getCurrentSession();
 
-  if (!payload) {
+  if (!uid) {
     redirect("/auth/signin");
   }
 
   const [ user, purchasedBooks, readingProgresses ] = await Promise.all([
-    getUserInfo(payload.id),
-    getUserAllPurchasedBooks(payload.id),
-    getUserReadingProgresses(payload.id),
+    getUserInfo(uid),
+    getUserAllPurchasedBooks(uid),
+    getUserReadingProgresses(uid),
   ]);
 
   if (!user) {
     redirect("/auth/signin");
   }
+
+  const isDemo = process.env.IS_DEMO === "true";
 
   const latestPurchase = purchasedBooks[0];
   const totalSpent = purchasedBooks.reduce((sum, item) => 
@@ -51,12 +54,15 @@ export default async function UserPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <div className="flex justify-between items-start mb-6">
+        <div className="flex flex-col md:flex-row justify-between items-start gap-4 md:gap-0">
           <div>
             <h1 className="text-3xl font-bold mb-2">Welcome back, {user.name}!</h1>
             <p className="text-muted-foreground">{user.email}</p>
           </div>
-          <SignOutButton />
+          <div className="flex items-center gap-3 w-full md:w-auto">
+            {isDemo && <ResetDemoButton />}
+            <SignOutButton demo={isDemo} />
+          </div>
         </div>
       </div>
 

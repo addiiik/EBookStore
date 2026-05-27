@@ -4,41 +4,68 @@ import { jwtVerify } from "jose";
 
 const secret = new TextEncoder().encode(process.env.JWT_SECRET);
 
-async function getUserFromToken(request: NextRequest) {
-  const token = request.cookies.get("auth_token")?.value;
-  if (!token) return null;
+const isDemo = process.env.IS_DEMO === "true";
+const COOKIE_NAME = isDemo ? "demo_session" : "auth_session";
+
+async function isValidSession(request: NextRequest): Promise<boolean> {
+  const token = request.cookies.get(COOKIE_NAME)?.value;
+  if (!token) return false;
 
   try {
-    const { payload } = await jwtVerify(token, secret);
-    return payload;
+    await jwtVerify(token, secret);
+    return true;
   } catch {
-    return null;
+    return false;
   }
 }
 
 export default async function proxy(request: NextRequest) {
   const { pathname } = request.nextUrl;
-  const user = await getUserFromToken(request);
+  const hasSession = await isValidSession(request);
 
-  const isAuthPage =
-    pathname.startsWith("/auth/signin") ||
-    pathname.startsWith("/auth/signup");
+  const isExactAuthRoot = pathname === "/auth";
+  const isSubAuthPage = pathname.startsWith("/auth/signin") || pathname.startsWith("/auth/signup");
 
-  const isProtected = pathname.startsWith("/user") 
-    || pathname.startsWith("/cart") 
-    || pathname.startsWith("/wishlist")
-    || pathname.startsWith("/checkout")
-    || pathname.startsWith("/library")
-    || pathname.startsWith("/reader");
+  // ==========================================
+  // TRYB: DEMO
+  // ==========================================
 
-  if (user && isAuthPage) {
-    return NextResponse.redirect(new URL("/user", request.url));
-  }
+  if (isDemo) {
+    if (isSubAuthPage) {
+      return NextResponse.redirect(new URL("/auth", request.url));
+    }
+    if (!hasSession && !isExactAuthRoot) {
+      return NextResponse.redirect(new URL("/auth", request.url));
+    }
+    if (hasSession && isExactAuthRoot) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
+  } 
+  // ==========================================
+  // TRYB: STANDARDOWY (NIE-DEMO)
+  // ==========================================
 
-  if (!user && isProtected) {
-    const signInUrl = new URL("/auth/signin", request.url);
-    signInUrl.searchParams.set("redirect", pathname);
-    return NextResponse.redirect(signInUrl);
+  else {
+    if (isExactAuthRoot) {
+      return NextResponse.redirect(new URL("/auth/signin", request.url));
+    }
+
+    const isProtected =
+      pathname.startsWith("/cart") ||
+      pathname.startsWith("/wishlist") ||
+      pathname.startsWith("/checkout") ||
+      pathname.startsWith("/library") ||
+      pathname.startsWith("/reader");
+
+    if (!hasSession && isProtected) {
+      const signInUrl = new URL("/auth/signin", request.url);
+      signInUrl.searchParams.set("redirect", pathname);
+      return NextResponse.redirect(signInUrl);
+    }
+
+    if (hasSession && isSubAuthPage) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return NextResponse.next();
@@ -46,12 +73,6 @@ export default async function proxy(request: NextRequest) {
 
 export const config = {
   matcher: [
-    "/auth/:path*",
-    "/user/:path*",
-    "/cart/:path*",
-    "/wishlist/:path*",
-    "/library/:path*",
-    "/checkout/:path*",
-    "/reader/:path*",
+    "/((?!api|_next/static|_next/image|favicon.ico|sitemap.xml|robots.txt).*)",
   ],
 };

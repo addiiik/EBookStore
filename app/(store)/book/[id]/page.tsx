@@ -5,7 +5,7 @@ import WishlistButton from '@/components/buttons/wishlist';
 import BookComponent from '@/components/ui/book';
 import { BookOpen, CheckCircle, Star } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 import { formatPricePLN } from '@/lib/utils';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
@@ -20,18 +20,18 @@ export default async function BookPage({ params }: { params:  { id: string } }) 
   }
 
   const similarBooks = await getSimilarBooks(book.category, book.id);
-  const payload = await getUserFromToken();
+  const uid = await getCurrentSession();
   const coverColor = getBookCoverColor(book. id);
 
-  const purchasedSimilarBookIds = payload
-  ? await checkManyBooksPurchased(payload. id, similarBooks. map((b) => b.id))
+  const purchasedSimilarBookIds = uid
+  ? await checkManyBooksPurchased(uid, similarBooks. map((b) => b.id))
   : new Set();
 
-  const [wishlistState, cartState, isPurchased] = payload
+  const [wishlistState, cartState, isPurchased] = uid
     ? await Promise.all([
-        getBookWishlistState(payload.id, book.id),
-        getBookCartState(payload.id, book. id),
-        checkBookPurchased(payload.id, book.id)
+        getBookWishlistState(uid, book.id),
+        getBookCartState(uid, book. id),
+        checkBookPurchased(uid, book.id)
       ])
     : [false, false, false];
 

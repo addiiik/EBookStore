@@ -2,6 +2,8 @@
 
 import { prisma } from "@/lib/prisma";
 import { CartItemWithBook, WishlistItemWithBook } from "@/types/book";
+import { faker } from '@faker-js/faker'
+import { getCurrentSession } from "./auth";
 
 export async function getUserAllPurchasedBooks(userId: string) {
   return prisma.purchasedBook.findMany({
@@ -98,4 +100,42 @@ export async function getUserCartItemCount(userId: string) {
       userId: userId,
     },
   });
+}
+
+export async function createUser(): Promise<{ success: boolean; uid: string }> {
+  const firstName = faker.person.firstName();
+  const lastName = faker.person.lastName();
+
+  const user = await prisma.user.create({
+    data: {
+      name: firstName,
+      email: faker.internet.email({firstName: firstName, lastName: lastName}),
+      password: faker.internet.password()
+    }
+  })
+
+  return { success: true, uid: user.id };
+}
+
+
+export async function removeUser(): Promise<{ success: boolean }> {
+  const uid = await getCurrentSession();
+  if (!uid) return { success: false };
+ 
+  await prisma.user.delete({
+    where: { id: uid },
+  });
+ 
+  return { success: true };
+}
+
+export async function clearUserData(uid: string): Promise<{ success: boolean }> { 
+  await prisma.$transaction([
+    prisma.cartItem.deleteMany({ where: { userId: uid } }),
+    prisma.wishlistItem.deleteMany({ where: { userId: uid } }),
+    prisma.purchasedBook.deleteMany({ where: { userId: uid } }),
+    prisma.readingProgress.deleteMany({ where: { userId: uid } }),
+  ]);
+ 
+  return { success: true };
 }

@@ -1,6 +1,6 @@
 import { vi, describe, expect, it, beforeEach } from "vitest";
 import { prisma } from "@/lib/prisma";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 import { resetReadingProgress } from "@/app/actions/reader";
 
 vi.mock("@/lib/prisma", () => ({
@@ -12,7 +12,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/app/actions/auth", () => ({
-  getUserFromToken: vi.fn(),
+  getCurrentSession: vi.fn(),
 }));
 
 describe("resetReadingProgress", () => {
@@ -24,11 +24,11 @@ describe("resetReadingProgress", () => {
   });
 
   it("fails if user is not logged in", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(null);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(null);
 
     const result = await resetReadingProgress(mockBookId);
 
-    expect(getUserFromToken).toHaveBeenCalledTimes(1);
+    expect(getCurrentSession).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       success: false,
       message: "You need to be logged in",
@@ -37,7 +37,7 @@ describe("resetReadingProgress", () => {
   });
 
   it("returns failure if prisma.update throws", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     vi.mocked(prisma.readingProgress.update).mockRejectedValueOnce(
       new Error("db error"),
     );
@@ -51,7 +51,7 @@ describe("resetReadingProgress", () => {
   });
 
   it("resets reading progress", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     vi.mocked(prisma.readingProgress.update).mockResolvedValueOnce({} as any);
 
     const result = await resetReadingProgress(mockBookId);

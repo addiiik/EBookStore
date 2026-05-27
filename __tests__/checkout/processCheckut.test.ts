@@ -2,7 +2,7 @@ import { vi, describe, expect, it, beforeEach } from "vitest";
 import { processCheckout } from "@/app/actions/checkout";
 import { prisma } from "@/lib/prisma";
 import { revalidatePath } from "next/cache";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 import { getUserPurchasedBooks } from "@/app/actions/user";
 
 vi.mock("@/lib/prisma", () => ({
@@ -23,7 +23,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/app/actions/auth", () => ({
-  getUserFromToken: vi.fn(),
+  getCurrentSession: vi.fn(),
 }));
 
 vi.mock("@/app/actions/user", () => ({
@@ -43,11 +43,11 @@ describe("processCheckout", () => {
   });
 
   it("fails if user is not logged in", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(null);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(null);
 
     const result = await processCheckout(bookIds);
 
-    expect(getUserFromToken).toHaveBeenCalledTimes(1);
+    expect(getCurrentSession).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       success: false,
       message: "You need to be logged in",
@@ -56,7 +56,7 @@ describe("processCheckout", () => {
   });
 
   it("fails if user already owns one or more of the requested books", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     vi.mocked(getUserPurchasedBooks).mockResolvedValueOnce([
       { book: { id: "book-2" } },
     ] as any);
@@ -72,7 +72,7 @@ describe("processCheckout", () => {
   });
 
   it("returns failure if any db operation throws", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     vi.mocked(getUserPurchasedBooks).mockResolvedValueOnce([] as any);
 
     (prisma.purchasedBook.createMany as any).mockRejectedValueOnce(
@@ -88,7 +88,7 @@ describe("processCheckout", () => {
   });
 
   it("creates purchasedBooks, checkoutSession, deletes cart & wishlist items, and revalidates path", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     vi.mocked(getUserPurchasedBooks).mockResolvedValueOnce([] as any);
 
     (prisma.purchasedBook.createMany as any).mockResolvedValueOnce({});

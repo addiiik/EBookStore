@@ -1,7 +1,7 @@
 import { vi, describe, expect, it, beforeEach } from "vitest";
 import { toggleWishlistState } from "@/app/actions/book";
 import { prisma } from "@/lib/prisma";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 
 vi.mock("@/lib/prisma", () => ({
   prisma: {
@@ -14,7 +14,7 @@ vi.mock("@/lib/prisma", () => ({
 }));
 
 vi.mock("@/app/actions/auth", () => ({
-  getUserFromToken: vi.fn(),
+  getCurrentSession: vi.fn(),
 }));
 
 describe("toggleWishlistState", () => {
@@ -26,11 +26,11 @@ describe("toggleWishlistState", () => {
   });
 
   it("fails if user is not logged in", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(null);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(null);
 
     const result = await toggleWishlistState(bookId);
 
-    expect(getUserFromToken).toHaveBeenCalledTimes(1);
+    expect(getCurrentSession).toHaveBeenCalledTimes(1);
     expect(result).toEqual({
       success: false,
       message: "You need to be logged in",
@@ -40,7 +40,7 @@ describe("toggleWishlistState", () => {
   });
 
   it("removes item from wishlist if it already exists", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     (prisma.wishlistItem.findFirst as any).mockResolvedValueOnce({
       id: "wishlist-1",
     });
@@ -65,7 +65,7 @@ describe("toggleWishlistState", () => {
   });
 
   it("adds item to wishlist if it does not exist", async () => {
-    vi.mocked(getUserFromToken).mockResolvedValueOnce(mockUser as any);
+    vi.mocked(getCurrentSession).mockResolvedValueOnce(mockUser as any);
     (prisma.wishlistItem.findFirst as any).mockResolvedValueOnce(null);
     (prisma.wishlistItem.create as any).mockResolvedValueOnce({});
 

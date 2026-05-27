@@ -6,14 +6,14 @@ import { ShoppingCart } from "lucide-react";
 import { redirect } from "next/navigation";
 import Link from "next/link";
 import { formatPricePLN } from "@/lib/utils";
-import { getUserFromToken } from "@/app/actions/auth";
+import { getCurrentSession } from "@/app/actions/auth";
 
 export default async function CartPage() {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     redirect("/auth/signin");
   }
-  const cartItems = await getUserCartItems(payload.id);
+  const cartItems = await getUserCartItems(uid);
 
   if (cartItems.length === 0) {
     return (

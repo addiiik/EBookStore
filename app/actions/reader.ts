@@ -1,7 +1,7 @@
 'use server';
 
 import { prisma } from '@/lib/prisma';
-import { getUserFromToken } from './auth';
+import { getCurrentSession } from './auth';
 
 export async function getReadingProgress(userId: string, bookId: string) {
   return prisma.readingProgress.findUnique({
@@ -36,8 +36,8 @@ export async function checkReadingProgress(userId: string, bookId: string) {
 }
 
 export async function updateReadingProgress(bookId: string, page: number) {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     return { success: false, message: 'You need to be logged in' };
   }
 
@@ -47,7 +47,7 @@ export async function updateReadingProgress(bookId: string, page: number) {
     await prisma.readingProgress.update({
       where: {
         userId_bookId: {
-          userId: payload.id,
+          userId: uid,
           bookId,
         },
       },
@@ -57,14 +57,14 @@ export async function updateReadingProgress(bookId: string, page: number) {
     });
 
     return { success: true, message: 'Progress updated' };
-  } catch (error) {
+  } catch  {
     return { success: false, message: 'Could not update progress' };
   }
 }
 
 export async function resetReadingProgress(bookId: string) {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     return { success: false, message: 'You need to be logged in' };
   }
 
@@ -72,7 +72,7 @@ export async function resetReadingProgress(bookId: string) {
     await prisma.readingProgress.update({
       where: {
         userId_bookId: {
-          userId: payload. id,
+          userId: uid,
           bookId,
         },
       },
@@ -83,7 +83,7 @@ export async function resetReadingProgress(bookId: string) {
     });
 
     return { success: true, message: 'Progress reset' };
-  } catch (error) {
+  } catch {
     return { success: false, message: 'Could not reset progress' };
   }
 }
@@ -107,8 +107,8 @@ export async function getUserReadingProgresses(userId: string) {
 }
 
 export async function finishBook(bookId: string) {
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     return { success: false, message: 'You need to be logged in' };
   }
 
@@ -116,7 +116,7 @@ export async function finishBook(bookId: string) {
     await prisma.readingProgress.update({
       where: {
         userId_bookId: {
-          userId: payload.id,
+          userId: uid,
           bookId,
         },
       },
@@ -126,7 +126,7 @@ export async function finishBook(bookId: string) {
     });
 
     return { success: true, message: 'Book finished' };
-  } catch (error) {
+  } catch {
     return { success: false, message: 'Could not mark book as finished' };
   }
 }

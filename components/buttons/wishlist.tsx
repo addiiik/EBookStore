@@ -31,7 +31,7 @@ export default function WishlistButton({
       else {
         toast.error(result.message);
       }
-    } catch (error: any) {
+    } catch {
       toast.error("Something went wrong");
     }
   };

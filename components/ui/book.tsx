@@ -8,7 +8,7 @@ import CartButton from '@/components/buttons/cart';
 import { Book } from '@/types/book';
 import { getBookWishlistState } from '@/app/actions/book';
 import { getBookCartState } from '@/app/actions/book';
-import { getUserFromToken } from '@/app/actions/auth';
+import { getCurrentSession } from '@/app/actions/auth';
 import { formatPricePLN } from '@/lib/utils';
 import { getBookCoverColor } from '@/lib/book/colors';
 
@@ -43,19 +43,19 @@ export default async function BookComponent({
 }: BookComponentProps) {
 
   const bookIsPurchased = inLibrary || isPurchased;
-  const payload = await getUserFromToken();
-  const coverColor = getBookCoverColor(book. id);
+  const uid = await getCurrentSession();
+  const coverColor = getBookCoverColor(book.id);
 
-  const [wishlistState, cartState] = payload && ! reader
+  const [wishlistState, cartState] = uid && !reader
     ? await Promise.all([
-        getBookWishlistState(payload.id, book.id),
-        getBookCartState(payload.id, book. id),
+        getBookWishlistState(uid, book.id),
+        getBookCartState(uid, book.id),
       ])
     : [false, false];
 
   if (reader) {
     const progressPercent = progress && pages
-      ? Math.round((progress. page / pages) * 100)
+      ? Math.round((progress.page / pages) * 100)
       : 0;
 
     return (
@@ -93,34 +93,35 @@ export default async function BookComponent({
   }
   
   return (
-    <Card className="flex flex-col justify-between hover:shadow-lg transition-shadow duration-300 h-full relative">
+    <Card className="flex flex-col hover:shadow-lg transition-shadow duration-300 h-full relative">
       <Link href={`/book/${book.id}`} className="block">
-        <div className="p-4">
+        <div className="p-4 pb-2">
           <div 
-            className="aspect-3/4 rounded-md mb-4 flex flex-col items-center justify-center relative p-4"
+            className="aspect-3/4 rounded-md mb-3 flex flex-col items-center justify-center relative p-4"
             style={{ backgroundColor: coverColor }}
           >
             <h3 className="text-white text-center font-bold text-lg leading-tight line-clamp-4 drop-shadow-md">
-              {book. title}
+              {book.title}
             </h3>
           </div>
-          <Badge variant="secondary" className="w-fit mb-2">
+          <Badge variant="secondary" className="w-fit mb-1.5">
             {book.category}
           </Badge>
-          <CardTitle className="text-lg line-clamp-2 mb-2">
+          <CardTitle className="text-lg line-clamp-2 mb-1">
             {book.title}
           </CardTitle>
           <CardDescription className="text-sm">
-            {book. author}
+            {book.author}
           </CardDescription>
         </div>
       </Link>
       
       <CardContent className="p-4 pt-0 mt-auto">
-        <div className="flex items-center justify-between mb-3">
-          {!bookIsPurchased && (
+        {/* Kontener ceny i ocen renderuje się TYLKO gdy książka nie jest kupiona (brak ghost-space) */}
+        {!bookIsPurchased && (
+          <div className="flex items-center justify-between mb-2">
             <div className="flex items-center space-x-2">
-              {book.discountedPrice ?  (
+              {book.discountedPrice ? (
                 <>
                   <span className="text-xl font-bold text-primary">
                     {formatPricePLN(book.discountedPrice)}
@@ -135,17 +136,15 @@ export default async function BookComponent({
                 </span>
               )}
             </div>
-          )}
-          {!bookIsPurchased && (
             <div className="flex items-center space-x-1 ml-auto">
               <Star className="h-4 w-4 text-yellow-500 fill-current" />
               <span className="text-sm">{book.rating}</span>
             </div>
-          )}
-        </div>
+          </div>
+        )}
         
         {!bookIsPurchased && (
-          showWishlistButton ?  (
+          showWishlistButton ? (
             <div className="flex gap-2">
               <div className="flex-1">
                 <CartButton 
@@ -155,7 +154,7 @@ export default async function BookComponent({
                   cartState={cartState}
                 />
               </div>
-              <WishlistButton bookId={book. id} size="sm" className="px-3" wishlistState={wishlistState} />
+              <WishlistButton bookId={book.id} size="sm" className="px-3" wishlistState={wishlistState} />
             </div>
           ) : (
             <CartButton 
@@ -167,7 +166,7 @@ export default async function BookComponent({
           )
         )}
         
-        {bookIsPurchased && ! inLibrary && (
+        {bookIsPurchased && !inLibrary && (
           <div className="text-center">
             <Badge variant="outline" className="text-green-600 border-green-600 px-6 py-1 text-sm font-medium">
               In Your Library
@@ -176,7 +175,7 @@ export default async function BookComponent({
         )}
 
         {inLibrary && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {purchasedAt && (
               <div className="flex items-center justify-center text-sm text-muted-foreground bg-muted/30 rounded-lg py-2 px-3">
                 <Calendar className="w-4 h-4 mr-2" />

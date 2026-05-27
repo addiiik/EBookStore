@@ -1,19 +1,17 @@
 'use server';
 
 import { prisma } from "@/lib/prisma";
-import { getUserFromToken } from "./auth";
+import { getCurrentSession } from "./auth";
 import { getUserPurchasedBooks } from "./user";
 import { revalidatePath } from "next/cache";
 
 export async function processCheckout(bookIds: string[]){
-  const payload = await getUserFromToken();
-  if (!payload) {
+  const uid = await getCurrentSession();
+  if (!uid) {
     return {success: false, message: 'You need to be logged in'}
   }
 
-  const userId = payload.id
-
-  const purchasedBooks = await getUserPurchasedBooks(userId);
+  const purchasedBooks = await getUserPurchasedBooks(uid);
 
   const purchasedIds = purchasedBooks.map(pb => pb.book.id);
   const alreadyOwned = bookIds.filter(id => purchasedIds.includes(id));
@@ -25,7 +23,7 @@ export async function processCheckout(bookIds: string[]){
   try {
     await prisma.purchasedBook.createMany({
       data: bookIds.map((id) => ({
-        userId,
+        userId: uid,
         bookId: id
       })),
       skipDuplicates: true,
@@ -33,21 +31,21 @@ export async function processCheckout(bookIds: string[]){
 
     await prisma.checkoutSession.create({
       data: {
-        userId,
+        userId: uid,
         validUntil: new Date(Date.now() + 1000 * 30)
       }
     });
 
     await prisma.cartItem.deleteMany({
       where: {
-        userId,
+        userId: uid,
         bookId: { in: bookIds }
       }
     });
 
     await prisma.wishlistItem.deleteMany({
       where: {
-        userId,
+        userId: uid,
         bookId: { in: bookIds }
       }
     });
